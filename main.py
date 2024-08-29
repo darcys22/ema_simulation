@@ -1,5 +1,6 @@
 import time
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class TimeWeightedEMA:
     def __init__(self, half_life):
@@ -37,36 +38,45 @@ class TimeWeightedEMA:
             estimated_average = ((self.SCALING_FACTOR - alpha) * self.average / self.SCALING_FACTOR) + new_value
             return estimated_average
 
+values = []
+claimed = []
+for value in tqdm(range(300)):
 # Example usage
-twema = TimeWeightedEMA(half_life=12*60*60)  # 12 hours half-life
+    twema = TimeWeightedEMA(half_life=12*60*60)  # 12 hours half-life
 
 # Initialize arrays to store timestamps and values
-timestamps = []
-twema_values = []
-threshold = 2000000
-threshold_claimed = False
-value = 53
-total_claimed = 0
+    timestamps = []
+    twema_values = []
+    threshold = 2000000
+    threshold_claimed = False
+    total_claimed = 0
 
 # Simulate submitting a value of every second
-for timestamp in range(10 * 24 * 60 * 60):
-    twema_estimate = twema.estimate(value, timestamp)
-    if twema_estimate > threshold:
-        if not threshold_claimed:
-            print("Threshold triggered at timestamp {}, hours after start {:.2f}, total amount claimed {}".format(timestamp, timestamp/60/60, timestamp * 59))
-        threshold_claimed = True;
-        continue
-    twema_value = twema.update(value, timestamp)
-    timestamps.append(timestamp)
-    twema_values.append(twema_value)
-    total_claimed += value
+    for timestamp in range(10 * 24 * 60 * 60):
+        twema_estimate = twema.estimate(value, timestamp)
+        if twema_estimate > threshold:
+            # if not threshold_claimed:
+                # print("Threshold triggered at timestamp {}, hours after start {:.2f}, total amount claimed {}".format(timestamp, timestamp/60/60, timestamp * 59))
+            threshold_claimed = True;
+            continue
+        twema_value = twema.update(value, timestamp)
+        timestamps.append(timestamp)
+        twema_values.append(twema_value)
+        total_claimed += value
+    values.append(value)
+    claimed.append(total_claimed)
 
-print("total amount claimed {}".format(total_claimed))
 # Plot the results
-plt.plot(timestamps, twema_values, label='TWEMA')
-plt.axhline(y=threshold, color='r', linestyle='--', label='Threshold (2M)')  # Add threshold line
-plt.xlabel('Timestamp (s)')
-plt.ylabel('Value')
-plt.title('TWEMA over Time when claiming {} tokens per second'.format(value))
+# plt.plot(timestamps, total_claims, label='TWEMA')
+# plt.axhline(y=threshold, color='r', linestyle='--', label='Threshold (2M)')  # Add threshold line
+# plt.xlabel('Timestamp (s)')
+# plt.ylabel('Value')
+# plt.title('TWEMA over Time when claiming {} tokens per second'.format(value))
+# plt.legend()
+# plt.show()
+plt.plot(values, claimed)
+plt.xlabel('values')
+plt.ylabel('total claimed')
+plt.title('Claimed amount based on value per second'.format(value))
 plt.legend()
 plt.show()
